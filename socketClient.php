@@ -30,6 +30,8 @@ abstract class socketClient extends socket {
 	{
 		$this->connecting = true;
 		try {
+            $this->remote_address = $remote_address;
+            $this->remote_port = $remote_port;
 			parent::connect($remote_address, $remote_port);
 		} catch (socketException $e) {
 			echo "Caught exception: ".$e->getMessage()."\n";
@@ -62,7 +64,6 @@ abstract class socketClient extends socket {
 			$this->on_disconnect();
 			return false;
 		}
-		return false;
 	}
 
 	public function read($length = 4096)

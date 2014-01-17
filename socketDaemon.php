@@ -20,13 +20,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 class socketDaemon {
-	public $servers = array();
+    public $servers = array();
 	public $clients = array();
 
 	public function create_server($server_class, $client_class, $bind_address = 0, $bind_port = 0)
 	{
 		$server = new $server_class($client_class, $bind_address, $bind_port);
-		if (!is_subclass_of($server, 'socketServer')) {
+		if (!$server instanceof socketServer) {
 			throw new socketException("Invalid server class specified! Has to be a subclass of socketServer");
 		}
 		$this->servers[(int)$server->socket] = $server;
@@ -35,8 +35,9 @@ class socketDaemon {
 
 	public function create_client($client_class, $remote_address, $remote_port, $bind_address = 0, $bind_port = 0)
 	{
+        /** @var socketClient $client */
 		$client = new $client_class($bind_address, $bind_port);
-		if (!is_subclass_of($client, 'socketClient')) {
+		if (!$client instanceof socketClient) {
 			throw new socketException("Invalid client class specified! Has to be a subclass of socketClient");
 		}
 		$client->set_non_block(true);
@@ -117,18 +118,21 @@ class socketDaemon {
 		while (($events = socket_select($read_set, $write_set, $exception_set, 2)) !== false) {
 			if ($events > 0) {
 				foreach ($read_set as $socket) {
+                    /** @var socket $socket */
 					$socket = $this->get_class($socket);
-					if (is_subclass_of($socket,'socketServer')) {
+					if ($socket instanceof socketServer) {
+                        /** @var socketServer $client */
 						$client = $socket->accept();
 						$this->clients[(int)$client->socket] = $client;
-					} elseif (is_subclass_of($socket, 'socketClient')) {
+					} elseif ($socket instanceof socketClient) {
 						// regular on_read event
 						$socket->read();
 					}
 				}
 				foreach ($write_set as $socket) {
 					$socket = $this->get_class($socket);
-					if (is_subclass_of($socket, 'socketClient')) {
+					if ($socket instanceof socketClient) {
+                        /** @var socketClient $socket */
 						if ($socket->connecting === true) {
 							$socket->on_connect();
 							$socket->connecting = false;
@@ -138,7 +142,7 @@ class socketDaemon {
 				}
 				foreach ($exception_set as $socket) {
 					$socket = $this->get_class($socket);
-					if (is_subclass_of($socket, 'socketClient')) {
+					if ($socket instanceof socketClient) {
 						$socket->on_disconnect();
 						if (isset($this->clients[(int)$socket->socket])) {
 							unset($this->clients[(int)$socket->socket]);
@@ -147,7 +151,7 @@ class socketDaemon {
 				}
 			}
 			if (time() - $event_time > 1) {
-				// only do this if more then a second passed, else we'd keep looping this for every bit recieved
+				// only do this if more then a second passed, else we'd keep looping this for every bit received
 				foreach ($this->clients as $socket) {
 					$socket->on_timer();
 				}

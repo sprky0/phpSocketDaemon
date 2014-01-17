@@ -105,8 +105,6 @@ abstract class socket {
 
 	public function connect($remote_address, $remote_port)
 	{
-		$this->remote_address = $remote_address;
-		$this->remote_port    = $remote_port;
 		if (!is_resource($this->socket)) {
 			throw new socketException("Invalid socket or resource");
 		} elseif (!@socket_connect($this->socket, $remote_address, $remote_port)) {
@@ -151,12 +149,12 @@ abstract class socket {
 		}
 	}
 
-	public function set_recieve_timeout($sec, $usec)
+	public function set_receive_timeout($sec, $usec)
 	{
 		if (!is_resource($this->socket)) {
 			throw new socketException("Invalid socket or resource");
 		} elseif (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => $sec, "usec" => $usec))) {
-			throw new socketException("Could not set socket recieve timeout: ".$this->get_error());
+			throw new socketException("Could not set socket receive timeout: ".$this->get_error());
 		}
 	}
 

@@ -32,7 +32,7 @@ abstract class socketServer extends socket {
 	public function accept()
 	{
 		$client = new $this->client_class(parent::accept());
-		if (!is_subclass_of($client, 'socketServerClient')) {
+		if (!$client instanceof socketServerClient) {
 			throw new socketException("Invalid serverClient class specified! Has to be a subclass of socketServerClient");
 		}
 		$this->on_accept($client);
