@@ -23,8 +23,8 @@ use Chabot\Socket\SocketDaemon;
  */
 
 require_once __DIR__ . '/../includes.php';
-require_once __DIR__ . '/httpdServerClient.php';
+require_once __DIR__ . '/HttpClient.php';
 
 $daemon = new SocketDaemon();
-$server = $daemon->create_server('\\httpdServerClient', 0, 2001);
+$server = $daemon->create_server('HttpClient', 0, 2001);
 $daemon->process();
