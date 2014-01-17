@@ -1,24 +1,26 @@
-<?
-/*
-phpSocketDaemon 1.0
-Copyright (C) 2006 Chris Chabot <chabotc@xs4all.nl>
-See http://www.chabotc.nl/ for more information
+<?php
+namespace Chabot\Socket;
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-abstract class socketClient extends socket {
+/**
+ * <pre>phpSocketDaemon 1.0
+ * Copyright (C) 2006 Chris Chabot <chabotc@xs4all.nl>
+ * See http://www.chabotc.nl/ for more information</pre>
+ *
+ * <p>This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.</p>
+ *
+ * <p>This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.</p>
+ *
+ * <p>You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA</p>
+ */
+abstract class SocketClient extends Socket {
 	public $remote_address = null;
 	public $remote_port    = null;
 	public $connecting     = false;
@@ -33,7 +35,7 @@ abstract class socketClient extends socket {
             $this->remote_address = $remote_address;
             $this->remote_port = $remote_port;
 			parent::connect($remote_address, $remote_port);
-		} catch (socketException $e) {
+		} catch (Exception $e) {
 			echo "Caught exception: ".$e->getMessage()."\n";
 		}
 	}
@@ -56,7 +58,7 @@ abstract class socketClient extends socket {
 			}
 			$this->on_write();
 			return true;
-		} catch (socketException $e) {
+		} catch (Exception $e) {
 			$old_socket         = (int)$this->socket;
 			$this->close();
 			$this->socket       = $old_socket;
@@ -71,7 +73,7 @@ abstract class socketClient extends socket {
 		try {
 			$this->read_buffer .= parent::read($length);
 			$this->on_read();
-		} catch (socketException $e) {
+		} catch (Exception $e) {
 			$old_socket         = (int)$this->socket;
 			$this->close();
 			$this->socket       = $old_socket;

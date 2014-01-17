@@ -1,33 +1,43 @@
-<?
-/*
-phpSocketDaemon 1.0
-Copyright (C) 2006 Chris Chabot <chabotc@xs4all.nl>
-See http://www.chabotc.nl/ for more information
+<?php
+namespace Chabot\Socket;
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
-class socketDaemon {
+/**
+ * <pre>phpSocketDaemon 1.0
+ * Copyright (C) 2006 Chris Chabot <chabotc@xs4all.nl>
+ * See http://www.chabotc.nl/ for more information</pre>
+ *
+ * <p>This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.</p>
+ *
+ * <p>This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.</p>
+ *
+ * <p>You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA</p>
+ */
+class SocketDaemon {
     public $servers = array();
 	public $clients = array();
 
-	public function create_server($server_class, $client_class, $bind_address = 0, $bind_port = 0)
+	public function create_server($server_class, $client_class = null, $bind_address = 0, $bind_port = 0)
 	{
+        if (func_num_args() < 4 && preg_match('#[.:]|^0?$#', $client_class)) {
+            $bind_port    = $bind_address;
+            $bind_address = $client_class;
+            $client_class = $server_class;
+            $server_class = null;
+        }
+        if (!$server_class) {
+            $server_class = __NAMESPACE__ . '\\Server';
+        }
 		$server = new $server_class($client_class, $bind_address, $bind_port);
-		if (!$server instanceof socketServer) {
-			throw new socketException("Invalid server class specified! Has to be a subclass of socketServer");
+		if (!$server instanceof Server) {
+			throw new Exception("Invalid server class specified! Has to be a subclass of SocketServer");
 		}
 		$this->servers[(int)$server->socket] = $server;
 		return $server;
@@ -35,10 +45,10 @@ class socketDaemon {
 
 	public function create_client($client_class, $remote_address, $remote_port, $bind_address = 0, $bind_port = 0)
 	{
-        /** @var socketClient $client */
+        /** @var SocketClient $client */
 		$client = new $client_class($bind_address, $bind_port);
-		if (!$client instanceof socketClient) {
-			throw new socketException("Invalid client class specified! Has to be a subclass of socketClient");
+		if (!$client instanceof SocketClient) {
+			throw new Exception("Invalid client class specified! Has to be a subclass of SocketClient");
 		}
 		$client->set_non_block(true);
 		$client->connect($remote_address, $remote_port);
@@ -104,7 +114,7 @@ class socketDaemon {
 		} elseif (isset($this->servers[(int)$socket])) {
 			return $this->servers[(int)$socket];
 		} else {
-			throw (new socketException("Could not locate socket class for $socket"));
+			throw (new Exception("Could not locate socket class for $socket"));
 		}
 	}
 
@@ -118,21 +128,21 @@ class socketDaemon {
 		while (($events = socket_select($read_set, $write_set, $exception_set, 2)) !== false) {
 			if ($events > 0) {
 				foreach ($read_set as $socket) {
-                    /** @var socket $socket */
+                    /** @var \Chabot\Socket\Socket $socket */
 					$socket = $this->get_class($socket);
-					if ($socket instanceof socketServer) {
-                        /** @var socketServer $client */
+					if ($socket instanceof Server) {
+                        /** @var Server $client */
 						$client = $socket->accept();
 						$this->clients[(int)$client->socket] = $client;
-					} elseif ($socket instanceof socketClient) {
+					} elseif ($socket instanceof SocketClient) {
 						// regular on_read event
 						$socket->read();
 					}
 				}
 				foreach ($write_set as $socket) {
 					$socket = $this->get_class($socket);
-					if ($socket instanceof socketClient) {
-                        /** @var socketClient $socket */
+					if ($socket instanceof SocketClient) {
+                        /** @var SocketClient $socket */
 						if ($socket->connecting === true) {
 							$socket->on_connect();
 							$socket->connecting = false;
@@ -142,7 +152,7 @@ class socketDaemon {
 				}
 				foreach ($exception_set as $socket) {
 					$socket = $this->get_class($socket);
-					if ($socket instanceof socketClient) {
+					if ($socket instanceof SocketClient) {
 						$socket->on_disconnect();
 						if (isset($this->clients[(int)$socket->socket])) {
 							unset($this->clients[(int)$socket->socket]);
