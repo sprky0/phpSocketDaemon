@@ -2,8 +2,6 @@
 * Author: Chris Chabot <chabotc@xs4all.nl>
 * Forked from: https://code.google.com/p/phpsocketdaemon/
 
-Original contents of README below:
-
 This project came into existence while i was writing a new, ground breaking IRC
 chat web application. To deal with 1000's of concurrent, always on 
 (comet aka hanging iframe) http (server) connections, and an equal amount of IRC
@@ -19,8 +17,8 @@ of what its capable off, and how to use this library.
 To create a server is as simple as 3 lines of code, for example for our http server:
 
     <?php
-        $daemon = new socketDaemon();
-        $server = $daemon->create_server('httpdServer', 'httpdServerClient', 0, 2001);
+        $daemon = new SocketDaemon();
+        $server = $daemon->create_server('\\httpdServerClient', 0, 2001);
         $daemon->process();
     ?>
 
@@ -34,10 +32,10 @@ Creating a client with this framework is just as simple:
         $client = $daemon->create_client('myClientClass', 'remote.com', 80);
     ?>
 
-And then implementing a socketClient class, ie:
+And then implementing a SocketClient class, ie:
 
     <?php
-    class myClientClass extends socketClient {
+    class myClientClass extends SocketClient {
         public function on_read()
         {
             // handle incoming data which is in $this->read_buffer, for example the
@@ -58,6 +56,6 @@ And then implementing a socketClient class, ie:
     }
     ?>
 
-The socket library will deal with all the information that needs to be written (write as much as can be done right away without blocking, and the rest is buffered until it can be written), when data comes in the on_read function is called (check $this->read_buffer to get to it), and connect and disconnect speak for them selves.. The on_timer function is called every 2 seconds (see socketDaemon.php line 97 to change the rate), for dealing with time based events (like the keep-alive time expiring for a http request)
+The socket library will deal with all the information that needs to be written (write as much as can be done right away without blocking, and the rest is buffered until it can be written), when data comes in the on_read function is called (check $this->read_buffer to get to it), and connect and disconnect speak for themselves. The on_timer function is called every 2 seconds (see socketDaemon.php line 97 to change the rate), for dealing with time based events (like the keep-alive time expiring for a http request).
 
 Enjoy & Happy coding!

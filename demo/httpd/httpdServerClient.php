@@ -1,27 +1,27 @@
-<?
-/*
-phpSocketDaemon 1.0 - httpd server demo implementation
-Copyright (C) 2006 Chris Chabot <chabotc@xs4all.nl>
-See http://www.chabotc.nl/ for more information
+<?php
+use Chabot\Socket\ServerClient;
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
+/**
+ * <pre>phpSocketDaemon 1.0
+ * Copyright (C) 2006 Chris Chabot <chabotc@xs4all.nl>
+ * See http://www.chabotc.nl/ for more information</pre>
+ *
+ * <p>This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.</p>
+ *
+ * <p>This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.</p>
+ *
+ * <p>You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA</p>
+ */
 
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-class httpdServer extends socketServer {
-}
-
-class httpdServerClient extends socketServerClient {
+class httpdServerClient extends ServerClient {
 	private $max_total_time = 45;
 	private $max_idle_time  = 15;
 	private $keep_alive = false;
@@ -92,7 +92,7 @@ class httpdServerClient extends socketServerClient {
 		if ((strpos($this->read_buffer,"\r\n\r\n")) !== FALSE || (strpos($this->read_buffer,"\n\n")) !== FALSE) {
 			$request = array();
 			$headers = explode("\n", $this->read_buffer);
-			$request['uri'] = $headers[0];
+			$request['uri'] = trim($headers[0]);
 			unset($headers[0]);
 			while (list(, $line) = each($headers)) {
 				$line = trim($line);
@@ -108,11 +108,7 @@ class httpdServerClient extends socketServerClient {
 			$request['version'] = substr($uri, strpos($uri, 'HTTP/') + 5, 3);
 			$uri                = substr($uri, strlen($request['method']) + 1);
 			$request['url']     = substr($uri, 0, strpos($uri, ' '));
-			foreach ($request as $type => $val) {
-				if ($type == 'connection' && $val == 'keep-alive') {
-					$this->keep_alive = true;
-				}
-			}
+            $this->keep_alive   = isset($request['connection']) && $request['connection'] === 'keep-alive';
 			$this->write($this->handle_request($request));
 			$this->read_buffer  = '';
 		}
